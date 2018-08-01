@@ -1,6 +1,7 @@
 package terraform
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"testing"
@@ -8,8 +9,10 @@ import (
 
 	"github.com/hashicorp/hil"
 	"github.com/hashicorp/terraform/config"
-	"github.com/hashicorp/terraform/configs/configschema"
 	"github.com/hashicorp/terraform/configs"
+	"github.com/hashicorp/terraform/configs/configschema"
+	"github.com/hashicorp/terraform/states"
+	"github.com/hashicorp/terraform/states/statefile"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/hashicorp/go-version"
@@ -434,7 +437,7 @@ func testProvisioner() *MockResourceProvisioner {
 	return p
 }
 
-func checkStateString(t *testing.T, state *State, expected string) {
+func checkStateString(t *testing.T, state *states.State, expected string) {
 	t.Helper()
 	actual := strings.TrimSpace(state.String())
 	expected = strings.TrimSpace(expected)
@@ -694,6 +697,37 @@ func testProviderSchema(name string) *ProviderSchema {
 		},
 	}
 
+}
+
+// shimLegacyState is a helper that takes the legacy state type and
+// converts it to the new state type.
+//
+// This is implemented as a state file upgrade, so it will not preserve
+// parts of the state structure that are not included in a serialized state,
+// such as the resolved results of any local values, outputs in non-root
+// modules, etc.
+func shimLegacyState(legacy *State) (*states.State, error) {
+	var buf bytes.Buffer
+	err := WriteState(legacy, &buf)
+	if err != nil {
+		return nil, err
+	}
+	f, err := statefile.Read(&buf)
+	if err != nil {
+		return nil, err
+	}
+	return f.State, err
+}
+
+// mustShimLegacyState is a wrapper around ShimLegacyState that panics if
+// the conversion does not succeed. This is primarily intended for tests where
+// the given legacy state is an object constructed within the test.
+func mustShimLegacyState(legacy *State) *states.State {
+	ret, err := ShimLegacyState(legacy)
+	if err != nil {
+		panic(err)
+	}
+	return ret
 }
 
 const testContextGraph = `

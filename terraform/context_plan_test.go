@@ -58,7 +58,7 @@ func TestContext2Plan_createBefore_deposed(t *testing.T) {
 	p := testProvider("aws")
 	p.DiffFn = testDiffFn
 
-	s := &State{
+	s := mustShimLegacyState(&State{
 		Modules: []*ModuleState{
 			&ModuleState{
 				Path: []string{"root"},
@@ -75,7 +75,7 @@ func TestContext2Plan_createBefore_deposed(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
 
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
@@ -455,7 +455,7 @@ func TestContext2Plan_moduleOrphans(t *testing.T) {
 	m := testModule(t, "plan-modules-remove")
 	p := testProvider("aws")
 	p.DiffFn = testDiffFn
-	s := &State{
+	s := mustShimLegacyState(&State{
 		Modules: []*ModuleState{
 			&ModuleState{
 				Path: []string{"root", "child"},
@@ -469,7 +469,7 @@ func TestContext2Plan_moduleOrphans(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
 		ProviderResolver: ResourceProviderResolverFixed(
@@ -498,7 +498,7 @@ func TestContext2Plan_moduleOrphansWithProvisioner(t *testing.T) {
 	p := testProvider("aws")
 	pr := testProvisioner()
 	p.DiffFn = testDiffFn
-	s := &State{
+	s := mustShimLegacyState(&State{
 		Modules: []*ModuleState{
 			&ModuleState{
 				Path: []string{"root"},
@@ -534,7 +534,7 @@ func TestContext2Plan_moduleOrphansWithProvisioner(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
 		ProviderResolver: ResourceProviderResolverFixed(
@@ -945,7 +945,7 @@ func TestContext2Plan_nil(t *testing.T) {
 				"aws": testProviderFuncFixed(p),
 			},
 		),
-		State: &State{
+		State: mustShimLegacyState(&State{
 			Modules: []*ModuleState{
 				&ModuleState{
 					Path: rootModulePath,
@@ -959,7 +959,7 @@ func TestContext2Plan_nil(t *testing.T) {
 					},
 				},
 			},
-		},
+		}),
 	})
 
 	plan, diags := ctx.Plan()
@@ -983,7 +983,7 @@ func TestContext2Plan_preventDestroy_bad(t *testing.T) {
 				"aws": testProviderFuncFixed(p),
 			},
 		),
-		State: &State{
+		State: mustShimLegacyState(&State{
 			Modules: []*ModuleState{
 				&ModuleState{
 					Path: rootModulePath,
@@ -997,7 +997,7 @@ func TestContext2Plan_preventDestroy_bad(t *testing.T) {
 					},
 				},
 			},
-		},
+		}),
 	})
 
 	plan, err := ctx.Plan()
@@ -1020,7 +1020,7 @@ func TestContext2Plan_preventDestroy_good(t *testing.T) {
 				"aws": testProviderFuncFixed(p),
 			},
 		),
-		State: &State{
+		State: mustShimLegacyState(&State{
 			Modules: []*ModuleState{
 				&ModuleState{
 					Path: rootModulePath,
@@ -1034,7 +1034,7 @@ func TestContext2Plan_preventDestroy_good(t *testing.T) {
 					},
 				},
 			},
-		},
+		}),
 	})
 
 	plan, diags := ctx.Plan()
@@ -1058,7 +1058,7 @@ func TestContext2Plan_preventDestroy_countBad(t *testing.T) {
 				"aws": testProviderFuncFixed(p),
 			},
 		),
-		State: &State{
+		State: mustShimLegacyState(&State{
 			Modules: []*ModuleState{
 				&ModuleState{
 					Path: rootModulePath,
@@ -1078,7 +1078,7 @@ func TestContext2Plan_preventDestroy_countBad(t *testing.T) {
 					},
 				},
 			},
-		},
+		}),
 	})
 
 	plan, err := ctx.Plan()
@@ -1111,7 +1111,7 @@ func TestContext2Plan_preventDestroy_countGood(t *testing.T) {
 				"aws": testProviderFuncFixed(p),
 			},
 		),
-		State: &State{
+		State: mustShimLegacyState(&State{
 			Modules: []*ModuleState{
 				&ModuleState{
 					Path: rootModulePath,
@@ -1131,7 +1131,7 @@ func TestContext2Plan_preventDestroy_countGood(t *testing.T) {
 					},
 				},
 			},
-		},
+		}),
 	})
 
 	plan, diags := ctx.Plan()
@@ -1165,7 +1165,7 @@ func TestContext2Plan_preventDestroy_countGoodNoChange(t *testing.T) {
 				"aws": testProviderFuncFixed(p),
 			},
 		),
-		State: &State{
+		State: mustShimLegacyState(&State{
 			Modules: []*ModuleState{
 				&ModuleState{
 					Path: rootModulePath,
@@ -1183,7 +1183,7 @@ func TestContext2Plan_preventDestroy_countGoodNoChange(t *testing.T) {
 					},
 				},
 			},
-		},
+		}),
 	})
 
 	plan, diags := ctx.Plan()
@@ -1207,7 +1207,7 @@ func TestContext2Plan_preventDestroy_destroyPlan(t *testing.T) {
 				"aws": testProviderFuncFixed(p),
 			},
 		),
-		State: &State{
+		State: mustShimLegacyState(&State{
 			Modules: []*ModuleState{
 				&ModuleState{
 					Path: rootModulePath,
@@ -1221,7 +1221,7 @@ func TestContext2Plan_preventDestroy_destroyPlan(t *testing.T) {
 					},
 				},
 			},
-		},
+		}),
 		Destroy: true,
 	})
 
@@ -1482,7 +1482,7 @@ func TestContext2Plan_dataSourceTypeMismatch(t *testing.T) {
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
 		// Pretend like we ran a Refresh and the AZs data source was populated.
-		State: &State{
+		State: mustShimLegacyState(&State{
 			Modules: []*ModuleState{
 				&ModuleState{
 					Path: rootModulePath,
@@ -1501,7 +1501,7 @@ func TestContext2Plan_dataSourceTypeMismatch(t *testing.T) {
 					},
 				},
 			},
-		},
+		}),
 		ProviderResolver: ResourceProviderResolverFixed(
 			map[string]ResourceProviderFactory{
 				"aws": testProviderFuncFixed(p),
@@ -1574,7 +1574,7 @@ func TestContext2Plan_dataResourceBecomesComputed(t *testing.T) {
 				"aws": testProviderFuncFixed(p),
 			},
 		),
-		State: &State{
+		State: mustShimLegacyState(&State{
 			Modules: []*ModuleState{
 				&ModuleState{
 					Path: rootModulePath,
@@ -1592,7 +1592,7 @@ func TestContext2Plan_dataResourceBecomesComputed(t *testing.T) {
 					},
 				},
 			},
-		},
+		}),
 	})
 
 	plan, diags := ctx.Plan()
@@ -1958,7 +1958,7 @@ func TestContext2Plan_countDecreaseToOne(t *testing.T) {
 	m := testModule(t, "plan-count-dec")
 	p := testProvider("aws")
 	p.DiffFn = testDiffFn
-	s := &State{
+	s := mustShimLegacyState(&State{
 		Modules: []*ModuleState{
 			&ModuleState{
 				Path: rootModulePath,
@@ -1988,7 +1988,7 @@ func TestContext2Plan_countDecreaseToOne(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
 		ProviderResolver: ResourceProviderResolverFixed(
@@ -2015,7 +2015,7 @@ func TestContext2Plan_countIncreaseFromNotSet(t *testing.T) {
 	m := testModule(t, "plan-count-inc")
 	p := testProvider("aws")
 	p.DiffFn = testDiffFn
-	s := &State{
+	s := mustShimLegacyState(&State{
 		Modules: []*ModuleState{
 			&ModuleState{
 				Path: rootModulePath,
@@ -2033,7 +2033,7 @@ func TestContext2Plan_countIncreaseFromNotSet(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
 		ProviderResolver: ResourceProviderResolverFixed(
@@ -2060,7 +2060,7 @@ func TestContext2Plan_countIncreaseFromOne(t *testing.T) {
 	m := testModule(t, "plan-count-inc")
 	p := testProvider("aws")
 	p.DiffFn = testDiffFn
-	s := &State{
+	s := mustShimLegacyState(&State{
 		Modules: []*ModuleState{
 			&ModuleState{
 				Path: rootModulePath,
@@ -2078,7 +2078,7 @@ func TestContext2Plan_countIncreaseFromOne(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
 		ProviderResolver: ResourceProviderResolverFixed(
@@ -2110,7 +2110,7 @@ func TestContext2Plan_countIncreaseFromOneCorrupted(t *testing.T) {
 	m := testModule(t, "plan-count-inc")
 	p := testProvider("aws")
 	p.DiffFn = testDiffFn
-	s := &State{
+	s := mustShimLegacyState(&State{
 		Modules: []*ModuleState{
 			&ModuleState{
 				Path: rootModulePath,
@@ -2138,7 +2138,7 @@ func TestContext2Plan_countIncreaseFromOneCorrupted(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
 		ProviderResolver: ResourceProviderResolverFixed(
@@ -2184,7 +2184,7 @@ func TestContext2Plan_countIncreaseWithSplatReference(t *testing.T) {
 	}
 	p.DiffFn = testDiffFn
 
-	s := &State{
+	s := mustShimLegacyState(&State{
 		Modules: []*ModuleState{
 			&ModuleState{
 				Path: rootModulePath,
@@ -2228,7 +2228,7 @@ func TestContext2Plan_countIncreaseWithSplatReference(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
 		ProviderResolver: ResourceProviderResolverFixed(
@@ -2279,7 +2279,7 @@ func TestContext2Plan_destroy(t *testing.T) {
 	m := testModule(t, "plan-destroy")
 	p := testProvider("aws")
 	p.DiffFn = testDiffFn
-	s := &State{
+	s := mustShimLegacyState(&State{
 		Modules: []*ModuleState{
 			&ModuleState{
 				Path: rootModulePath,
@@ -2299,7 +2299,7 @@ func TestContext2Plan_destroy(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
 		ProviderResolver: ResourceProviderResolverFixed(
@@ -2331,7 +2331,7 @@ func TestContext2Plan_moduleDestroy(t *testing.T) {
 	m := testModule(t, "plan-module-destroy")
 	p := testProvider("aws")
 	p.DiffFn = testDiffFn
-	s := &State{
+	s := mustShimLegacyState(&State{
 		Modules: []*ModuleState{
 			&ModuleState{
 				Path: rootModulePath,
@@ -2356,7 +2356,7 @@ func TestContext2Plan_moduleDestroy(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
 		ProviderResolver: ResourceProviderResolverFixed(
@@ -2385,7 +2385,7 @@ func TestContext2Plan_moduleDestroyCycle(t *testing.T) {
 	m := testModule(t, "plan-module-destroy-gh-1835")
 	p := testProvider("aws")
 	p.DiffFn = testDiffFn
-	s := &State{
+	s := mustShimLegacyState(&State{
 		Modules: []*ModuleState{
 			&ModuleState{
 				Path: []string{"root", "a_module"},
@@ -2410,7 +2410,7 @@ func TestContext2Plan_moduleDestroyCycle(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
 		ProviderResolver: ResourceProviderResolverFixed(
@@ -2438,7 +2438,7 @@ func TestContext2Plan_moduleDestroyMultivar(t *testing.T) {
 	m := testModule(t, "plan-module-destroy-multivar")
 	p := testProvider("aws")
 	p.DiffFn = testDiffFn
-	s := &State{
+	s := mustShimLegacyState(&State{
 		Modules: []*ModuleState{
 			&ModuleState{
 				Path:      rootModulePath,
@@ -2462,7 +2462,7 @@ func TestContext2Plan_moduleDestroyMultivar(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
 		ProviderResolver: ResourceProviderResolverFixed(
@@ -2541,7 +2541,7 @@ func TestContext2Plan_pathVar(t *testing.T) {
 func TestContext2Plan_diffVar(t *testing.T) {
 	m := testModule(t, "plan-diffvar")
 	p := testProvider("aws")
-	s := &State{
+	s := mustShimLegacyState(&State{
 		Modules: []*ModuleState{
 			&ModuleState{
 				Path: rootModulePath,
@@ -2558,7 +2558,7 @@ func TestContext2Plan_diffVar(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
 		ProviderResolver: ResourceProviderResolverFixed(
@@ -2657,7 +2657,7 @@ func TestContext2Plan_orphan(t *testing.T) {
 	m := testModule(t, "plan-orphan")
 	p := testProvider("aws")
 	p.DiffFn = testDiffFn
-	s := &State{
+	s := mustShimLegacyState(&State{
 		Modules: []*ModuleState{
 			&ModuleState{
 				Path: rootModulePath,
@@ -2671,7 +2671,7 @@ func TestContext2Plan_orphan(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
 		ProviderResolver: ResourceProviderResolverFixed(
@@ -2719,7 +2719,7 @@ func TestContext2Plan_state(t *testing.T) {
 	m := testModule(t, "plan-good")
 	p := testProvider("aws")
 	p.DiffFn = testDiffFn
-	s := &State{
+	s := mustShimLegacyState(&State{
 		Modules: []*ModuleState{
 			&ModuleState{
 				Path: rootModulePath,
@@ -2733,7 +2733,7 @@ func TestContext2Plan_state(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
 		ProviderResolver: ResourceProviderResolverFixed(
@@ -2764,7 +2764,7 @@ func TestContext2Plan_taint(t *testing.T) {
 	m := testModule(t, "plan-taint")
 	p := testProvider("aws")
 	p.DiffFn = testDiffFn
-	s := &State{
+	s := mustShimLegacyState(&State{
 		Modules: []*ModuleState{
 			&ModuleState{
 				Path: rootModulePath,
@@ -2786,7 +2786,7 @@ func TestContext2Plan_taint(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
 		ProviderResolver: ResourceProviderResolverFixed(
@@ -2824,7 +2824,7 @@ func TestContext2Plan_taintIgnoreChanges(t *testing.T) {
 	p.ApplyFn = testApplyFn
 	p.DiffFn = testDiffFn
 
-	s := &State{
+	s := mustShimLegacyState(&State{
 		Modules: []*ModuleState{
 			&ModuleState{
 				Path: rootModulePath,
@@ -2843,7 +2843,7 @@ func TestContext2Plan_taintIgnoreChanges(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
 		ProviderResolver: ResourceProviderResolverFixed(
@@ -2871,7 +2871,7 @@ func TestContext2Plan_taintDestroyInterpolatedCountRace(t *testing.T) {
 	m := testModule(t, "plan-taint-interpolated-count")
 	p := testProvider("aws")
 	p.DiffFn = testDiffFn
-	s := &State{
+	s := mustShimLegacyState(&State{
 		Modules: []*ModuleState{
 			&ModuleState{
 				Path: rootModulePath,
@@ -2894,7 +2894,7 @@ func TestContext2Plan_taintDestroyInterpolatedCountRace(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
 		ProviderResolver: ResourceProviderResolverFixed(
@@ -3079,7 +3079,7 @@ func TestContext2Plan_targetedOrphan(t *testing.T) {
 				"aws": testProviderFuncFixed(p),
 			},
 		),
-		State: &State{
+		State: mustShimLegacyState(&State{
 			Modules: []*ModuleState{
 				&ModuleState{
 					Path: rootModulePath,
@@ -3099,7 +3099,7 @@ func TestContext2Plan_targetedOrphan(t *testing.T) {
 					},
 				},
 			},
-		},
+		}),
 		Destroy: true,
 		Targets: []addrs.Targetable{
 			addrs.RootModuleInstance.Resource(
@@ -3142,7 +3142,7 @@ func TestContext2Plan_targetedModuleOrphan(t *testing.T) {
 				"aws": testProviderFuncFixed(p),
 			},
 		),
-		State: &State{
+		State: mustShimLegacyState(&State{
 			Modules: []*ModuleState{
 				&ModuleState{
 					Path: []string{"root", "child"},
@@ -3162,7 +3162,7 @@ func TestContext2Plan_targetedModuleOrphan(t *testing.T) {
 					},
 				},
 			},
-		},
+		}),
 		Destroy: true,
 		Targets: []addrs.Targetable{
 			addrs.RootModuleInstance.Child("child", addrs.NoKey).Resource(
@@ -3290,14 +3290,14 @@ func TestContext2Plan_targetedOverTen(t *testing.T) {
 				"aws": testProviderFuncFixed(p),
 			},
 		),
-		State: &State{
+		State: mustShimLegacyState(&State{
 			Modules: []*ModuleState{
 				&ModuleState{
 					Path:      rootModulePath,
 					Resources: resources,
 				},
 			},
-		},
+		}),
 		Targets: []addrs.Targetable{
 			addrs.RootModuleInstance.ResourceInstance(
 				addrs.ManagedResourceMode, "aws_instance", "foo", addrs.IntKey(1),
@@ -3419,7 +3419,7 @@ func TestContext2Plan_ignoreChanges(t *testing.T) {
 	}
 	p.DiffFn = testDiffFn
 
-	s := &State{
+	s := mustShimLegacyState(&State{
 		Modules: []*ModuleState{
 			&ModuleState{
 				Path: rootModulePath,
@@ -3434,7 +3434,7 @@ func TestContext2Plan_ignoreChanges(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
 		ProviderResolver: ResourceProviderResolverFixed(
@@ -3482,7 +3482,7 @@ func TestContext2Plan_ignoreChangesWildcard(t *testing.T) {
 	}
 	p.DiffFn = testDiffFn
 
-	s := &State{
+	s := mustShimLegacyState(&State{
 		Modules: []*ModuleState{
 			&ModuleState{
 				Path: rootModulePath,
@@ -3500,7 +3500,7 @@ func TestContext2Plan_ignoreChangesWildcard(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
 		ProviderResolver: ResourceProviderResolverFixed(
@@ -3813,7 +3813,7 @@ func TestContext2Plan_ignoreChangesWithFlatmaps(t *testing.T) {
 			},
 		},
 	}
-	s := &State{
+	s := mustShimLegacyState(&State{
 		Modules: []*ModuleState{
 			&ModuleState{
 				Path: rootModulePath,
@@ -3835,7 +3835,7 @@ func TestContext2Plan_ignoreChangesWithFlatmaps(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
 		ProviderResolver: ResourceProviderResolverFixed(
@@ -3870,7 +3870,7 @@ func TestContext2Plan_resourceNestedCount(t *testing.T) {
 	p.RefreshFn = func(i *InstanceInfo, is *InstanceState) (*InstanceState, error) {
 		return is, nil
 	}
-	s := &State{
+	s := mustShimLegacyState(&State{
 		Modules: []*ModuleState{
 			&ModuleState{
 				Path: rootModulePath,
@@ -3942,7 +3942,7 @@ func TestContext2Plan_resourceNestedCount(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
 	ctx := testContext2(t, &ContextOpts{
 		Config: m,
 		ProviderResolver: ResourceProviderResolverFixed(
